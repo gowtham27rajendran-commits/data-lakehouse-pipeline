@@ -1,34 +1,3 @@
-"""
-Streaming ingestion: Kafka → Bronze Delta Lake using Spark Structured Streaming.
-
-Key design decisions:
-
-1. WATERMARKING for late-arriving data:
-   - Retail events can arrive late due to network issues at store POS terminals
-   - Watermark of 2 hours: Spark will hold state for 2h past max event-time seen
-   - Events arriving > 2h late are still written but may miss windowed aggregations
-
-2. CHECKPOINTING:
-   - WAL-based checkpoint to S3 ensures exactly-once processing on restart
-   - Checkpoint location must be unique per streaming query
-
-3. TRIGGER:
-   - processingTime="30 seconds" balances latency vs overhead
-   - For lower latency needs, use "1 second" or "availableNow" for burst
-
-4. OUTPUT MODE:
-   - "append" for Bronze (never update raw records)
-   - "update" used in Silver aggregation streams
-
-Run:
-    spark-submit --packages io.delta:delta-core_2.12:3.0.0,\
-        org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
-        src/ingestion/streaming_ingestion.py \
-        --topic transactions \
-        --bootstrap-servers localhost:9092 \
-        --checkpoint s3a://checkpoints/transactions/
-"""
-
 import argparse
 import logging
 from pyspark.sql import SparkSession
